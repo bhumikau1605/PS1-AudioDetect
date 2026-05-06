@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+librosa
+numpy
+scipy
+soundfile
+python-multipart
+opencv-python
+mediapipe
+sounddevice
+pydub
+tqdm

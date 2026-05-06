@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini Shazam</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #31316C 0%, #1a1a3e 100%);
+      color: #E5D8F9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 40px;
+      padding: 60px 20px;
+      position: relative;
+      font-size: 18px;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 30%, rgba(17, 188, 244, 0.1), transparent 40%),
+                  radial-gradient(circle at 80% 70%, rgba(198, 61, 216, 0.1), transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    h1 { 
+      font-size: 4.5rem; 
+      font-weight: 800;
+      background: linear-gradient(135deg, #11BCF4 0%, #59E3F6 50%, #7871DD 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 0 40px rgba(17, 188, 244, 0.3);
+    }
+    
+    .card {
+      background: rgba(49, 49, 108, 0.3);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(17, 188, 244, 0.3);
+      border-radius: 24px;
+      padding: 48px;
+      width: 540px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(17, 188, 244, 0.1);
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+      border-color: rgba(89, 227, 246, 0.5);
+      box-shadow: 0 24px 72px rgba(0, 0, 0, 0.5), 0 0 60px rgba(17, 188, 244, 0.2);
+    }
+    
+    input[type="file"] { display: none; }
+    
+    label.upload-btn, button {
+      display: inline-block;
+      margin: 10px 8px;
+      padding: 16px 36px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      font-family: 'Outfit', sans-serif;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    label.upload-btn {
+      background: linear-gradient(135deg, #297AAE 0%, #11BCF4 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(17, 188, 244, 0.3);
+    }
+    
+    label.upload-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(17, 188, 244, 0.5);
+    }
+    
+    button {
+      background: linear-gradient(135deg, #7871DD 0%, #C63DD8 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(120, 113, 221, 0.3);
+    }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(198, 61, 216, 0.5);
+    }
+    
+    button.secondary {
+      background: rgba(89, 227, 246, 0.15);
+      border: 2px solid #59E3F6;
+      color: #59E3F6;
+      box-shadow: 0 4px 15px rgba(89, 227, 246, 0.2);
+    }
+    
+    button.secondary:hover:not(:disabled) {
+      background: rgba(89, 227, 246, 0.25);
+      box-shadow: 0 6px 25px rgba(89, 227, 246, 0.3);
+    }
+    
+    button.danger {
+      background: linear-gradient(135deg, #FF4FCF 0%, #C63DD8 100%);
+      box-shadow: 0 4px 15px rgba(255, 79, 207, 0.3);
+    }
+    
+    button.danger:hover:not(:disabled) {
+      box-shadow: 0 6px 25px rgba(255, 79, 207, 0.5);
+    }
+    
+    button:disabled { 
+      opacity: 0.4; 
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    #filename { 
+      font-size: 1.05rem; 
+      color: #A1E6F9; 
+      margin-top: 14px;
+      font-weight: 400;
+    }
+    
+    #result {
+      margin-top: 36px;
+      padding: 28px;
+      border-radius: 16px;
+      background: rgba(49, 49, 108, 0.4);
+      border: 1px solid rgba(89, 227, 246, 0.3);
+      min-height: 110px;
+      font-size: 1.15rem;
+      line-height: 2;
+      box-shadow: inset 0 0 20px rgba(17, 188, 244, 0.05);
+    }
+    
+    .song-title { 
+      font-size: 2.4rem; 
+      font-weight: 700; 
+      background: linear-gradient(135deg, #59E3F6 0%, #7871DD 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    
+    .confidence { 
+      color: #59E3F6; 
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(89, 227, 246, 0.5);
+    }
+    
+    .no-match { 
+      color: #FF4FCF;
+      font-weight: 600;
+      text-shadow: 0 0 10px rgba(255, 79, 207, 0.5);
+    }
+    
+    .spinner { 
+      animation: spin 1s linear infinite; 
+      display: inline-block;
+      filter: drop-shadow(0 0 5px #11BCF4);
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    #songList { width: 540px; }
+    
+    #songList table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      font-size: 1.05rem;
+    }
+    
+    #songList th { 
+      color: #59E3F6; 
+      padding: 16px 18px; 
+      border-bottom: 2px solid rgba(89, 227, 246, 0.3); 
+      text-align: left;
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    #songList td { 
+      padding: 16px 18px; 
+      border-bottom: 1px solid rgba(89, 227, 246, 0.1); 
+      color: #A1E6F9;
+    }
+    
+    #songList tr:hover td {
+      background: rgba(17, 188, 244, 0.1);
+      color: #E5D8F9;
+    }
+    
+    #recTimer { 
+      color: #FF4FCF; 
+      font-weight: 600; 
+      margin-top: 14px; 
+      font-size: 1.1rem;
+      text-shadow: 0 0 10px rgba(255, 79, 207, 0.5);
+    }
+    
+    #spectrogram { 
+      width: 100%; 
+      max-width: 490px; 
+      height: 280px; 
+      background: rgba(26, 26, 62, 0.5); 
+      border-radius: 16px; 
+      margin-top: 28px; 
+      display: none;
+      border: 1px solid rgba(89, 227, 246, 0.3);
+      box-shadow: inset 0 0 20px rgba(17, 188, 244, 0.1);
+    }
+    
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(89, 227, 246, 0.5), transparent);
+      margin: 36px 0;
+    }
+    
+    .subtitle {
+      color: #A1E6F9;
+      font-size: 1.1rem;
+      margin-bottom: 36px;
+      font-weight: 400;
+      letter-spacing: 1px;
+    }
+    
+    .section-title {
+      font-weight: 700;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #11BCF4 0%, #7871DD 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shazam</h1>
+
+  <div class="card">
+    <p class="subtitle">Audio Recognition System</p>
+
+    <!-- File Upload -->
+    <label class="upload-btn" for="audioFile">Choose File</label>
+    <input type="file" id="audioFile" accept=".wav,.mp3,.flac" onchange="onFileChange()" />
+    <div id="filename">No file selected</div>
+    <button id="identifyBtn" onclick="identifyFile()" disabled>Identify</button>
+
+    <hr />
+
+    <!-- Mic Recording -->
+    <div>
+      <button id="recBtn" onclick="startRec()">Start Recording</button>
+      <button id="stopBtn" class="danger" onclick="stopRec()" disabled>Stop & Identify</button>
+      <div id="recTimer"></div>
+    </div>
+
+    <div id="result"></div>
+    <canvas id="spectrogram"></canvas>
+  </div>
+
+  <!-- Song List -->
+  <div id="songList">
+    <div class="card" style="width:100%">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <span class="section-title">Song Library</span>
+        <button class="secondary" style="padding:12px 28px; font-size:1rem;" onclick="loadSongs()">Refresh</button>
+      </div>
+      <table id="songsTable">
+        <thead><tr><th>#</th><th>Title</th><th>Artist</th><th>Duration</th></tr></thead>
+        <tbody id="songsBody"><tr><td colspan="4" style="color:#7871DD">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const API = "http://localhost:8000";
+    let mediaRecorder, audioChunks = [], recInterval;
+    let audioCtx, analyser, animFrame;
+
+    function startSpectrogram(stream) {
+      const canvas = document.getElementById('spectrogram');
+      canvas.style.display = 'block';
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth * 2;
+      canvas.height = canvas.offsetHeight * 2;
+      canvas.style.width = canvas.offsetWidth / 2 + 'px';
+      canvas.style.height = canvas.offsetHeight / 2 + 'px';
+      
+      audioCtx = new AudioContext();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      audioCtx.createMediaStreamSource(stream).connect(analyser);
+      const buf = new Uint8Array(analyser.frequencyBinCount);
+      
+      function draw() {
+        animFrame = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(buf);
+        
+        ctx.fillStyle = 'rgba(26, 26, 62, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const barWidth = canvas.width / buf.length;
+        buf.forEach((v, i) => {
+          const h = (v / 255) * canvas.height * 0.8;
+          const progress = i / buf.length;
+          
+          // Gradient from Electric Cyan -> Bright Aqua -> Periwinkle -> Neon Purple
+          let r, g, b;
+          if (progress < 0.33) {
+            const t = progress / 0.33;
+            r = 17 + (89 - 17) * t;
+            g = 188 + (227 - 188) * t;
+            b = 244 + (246 - 244) * t;
+          } else if (progress < 0.66) {
+            const t = (progress - 0.33) / 0.33;
+            r = 89 + (120 - 89) * t;
+            g = 227 + (113 - 227) * t;
+            b = 246 + (221 - 246) * t;
+          } else {
+            const t = (progress - 0.66) / 0.34;
+            r = 120 + (198 - 120) * t;
+            g = 113 + (61 - 113) * t;
+            b = 221 + (216 - 221) * t;
+          }
+          
+          ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = `rgb(${r}, ${g}, ${b})`;
+          ctx.fillRect(i * barWidth, canvas.height - h, barWidth - 3, h);
+        });
+      }
+      draw();
+    }
+
+    function stopSpectrogram() {
+      cancelAnimationFrame(animFrame);
+      if (audioCtx) audioCtx.close();
+      const canvas = document.getElementById('spectrogram');
+      canvas.style.display = 'none';
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // --- File Upload ---
+    function onFileChange() {
+      const file = document.getElementById('audioFile').files[0];
+      document.getElementById('filename').innerText = file ? file.name : 'No file selected';
+      document.getElementById('identifyBtn').disabled = !file;
+      document.getElementById('result').innerHTML = '';
+    }
+
+    async function identifyFile() {
+      const file = document.getElementById('audioFile').files[0];
+      if (!file) return;
+      const form = new FormData();
+      form.append('file', file);
+      await sendAndShow(form);
+    }
+
+    // --- Mic Recording ---
+    async function startRec() {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.start();
+      startSpectrogram(stream);
+      document.getElementById('recBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+      let secs = 0;
+      recInterval = setInterval(() => {
+        document.getElementById('recTimer').innerText = `🔴 Recording ${++secs}s`;
+      }, 1000);
+    }
+
+    async function stopRec() {
+      clearInterval(recInterval);
+      stopSpectrogram();
+      document.getElementById('recTimer').innerText = '';
+      document.getElementById('recBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+      mediaRecorder.stop();
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/wav' });
+        const form = new FormData();
+        form.append('file', new File([blob], 'recording.wav'));
+        await sendAndShow(form);
+      };
+    }
+
+    // --- Shared ---
+    async function sendAndShow(form) {
+      showResult('<span class="spinner">⏳</span> Analyzing audio...');
+      try {
+        const res = await fetch(`${API}/identify`, { method: 'POST', body: form });
+        const data = await res.json();
+        displayResult(data);
+      } catch (e) {
+        showResult('<div class="no-match">⚠️ Could not reach server</div>');
+      }
+    }
+
+    function displayResult(data) {
+      if (data.title) {
+        showResult(`
+          <div class="song-title">🎵 ${data.title}</div>
+          <div style="color:#A1E6F9; font-size:1.1rem; margin-bottom:16px;">by ${data.artist}</div>
+          <div style="margin-top:20px;">Confidence: <span class="confidence">${data.confidence}%</span></div>
+          <div style="color:#7871DD; font-size:0.85rem; margin-top:10px;">Matched ${data.matched_hashes} of ${data.total_query_hashes} fingerprints</div>
+        `);
+      } else {
+        showResult('<div class="no-match">❌ No match found</div>');
+      }
+    }
+
+    function showResult(html) {
+      document.getElementById('result').innerHTML = html;
+    }
+
+    // --- Song List ---
+    async function loadSongs() {
+      try {
+        const res = await fetch(`${API}/songs`);
+        const songs = await res.json();
+        const tbody = document.getElementById('songsBody');
+        if (!songs.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="color:#7871DD">No songs in library</td></tr>';
+          return;
+        }
+        tbody.innerHTML = songs.map((s, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${s.title}</td>
+            <td>${s.artist}</td>
+            <td>${s.duration ? s.duration.toFixed(1) + 's' : '—'}</td>
+          </tr>
+        `).join('');
+      } catch {
+        document.getElementById('songsBody').innerHTML = '<tr><td colspan="4" style="color:#FF4FCF">Failed to load</td></tr>';
+      }
+    }
+
+    loadSongs();
+  </script>
+</body>
+</html>
